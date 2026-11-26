@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orçamento de Site | Erick Zaniratto</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#2563eb', dark: '#1d4ed8', light: '#93c5fd' },
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- jsPDF para geração do PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    (function () {
+      const saved = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (saved === 'dark' || (!saved && prefersDark)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-primary { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); }
+    .text-gradient {
+      background: linear-gradient(135deg, #2563eb 0%, #93c5fd 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .dark .text-gradient {
+      background: linear-gradient(135deg, #93c5fd 0%, #2563eb 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .step { display: none; }
+    .step.active { display: block; animation: fadeStep 0.4s ease; }
+    @keyframes fadeStep {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .option-card { cursor: pointer; transition: all 0.2s ease; }
+    .option-card.selected {
+      border-color: #2563eb !important;
+      background-color: rgba(37, 99, 235, 0.06);
+      box-shadow: 0 8px 24px -8px rgba(37, 99, 235, 0.3);
+    }
+    .dark .option-card.selected { background-color: rgba(37, 99, 235, 0.15); }
+    .progress-bar { transition: width 0.4s ease; }
+    input[type="range"] { accent-color: #2563eb; }
+    .badge-price {
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body class="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 antialiased">
+
+  <!-- NAVBAR -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
+    <nav class="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
+      <a href="index.html" class="text-xl font-extrabold text-primary-dark dark:text-primary-light tracking-tight">
+        &lt;Erick<span class="text-primary dark:text-primary-light">Zaniratto</span>/&gt;
+      </a>
+      <div class="flex items-center gap-3">
+        <button id="themeToggle" aria-label="Alternar tema"
+          class="w-10 h-10 rounded-lg flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
+          <svg id="iconSun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+          <svg id="iconMoon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+          </svg>
+        </button>
+        <a href="index.html" class="hidden md:inline-block px-5 py-2.5 rounded-lg border-2 border-primary dark:border-primary-light text-primary dark:text-primary-light hover:bg-primary hover:text-white text-sm font-semibold transition">
+          Voltar ao portfólio
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- CONTEÚDO -->
+  <main class="pt-28 pb-20">
+    <div class="max-w-5xl mx-auto px-6">
+
+      <!-- Cabeçalho -->
+      <div class="text-center mb-10">
+        <span class="inline-block px-4 py-1.5 rounded-full bg-primary-light/30 dark:bg-primary/20 text-primary-dark dark:text-primary-light text-xs font-semibold tracking-wide mb-4">
+          Simulador de Orçamento
+        </span>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white">
+          Monte seu <span class="text-gradient">orçamento estimado</span>
+        </h1>
+        <p class="mt-3 text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+          Responda algumas perguntas e receba uma estimativa de investimento para o seu site.
+          No final, você pode baixar a proposta em PDF.
+        </p>
+      </div>
+
+      <!-- Barra de progresso -->
+      <div class="mb-8">
+        <div class="flex justify-between text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+          <span id="stepLabel">Etapa 1 de 6</span>
+          <span id="stepName">Sobre o negócio</span>
+        </div>
+        <div class="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+          <div id="progressBar" class="progress-bar h-full gradient-primary rounded-full" style="width: 16.6%"></div>
+        </div>
+      </div>
+
+      <!-- ===================== ETAPA 1 ===================== -->
+      <section class="step active" data-step="1">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 md:p-8">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-1">Sobre o seu negócio</h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Conte um pouco sobre o projeto. Isso ajuda a personalizar a proposta.</p>
+
+          <div class="grid md:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Seu nome / Empresa</label>
+              <input id="clientName" type="text" placeholder="Ex: Maria Silva / Padaria Pão Bom"
+                class="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1.5">E-mail para contato</label>
+              <input id="clientEmail" type="email" placeholder="voce@email.com"
+                class="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition">
+            </div>
+          </div>
+
+          <div class="mt-5">
+            <label class="block text-sm font-medium mb-1.5">Descreva brevemente seu negócio / projeto</label>
+            <textarea id="businessDesc" rows="5" maxlength="500"
+              placeholder="Ex: Tenho uma padaria e quero um site para mostrar produtos, horários e receber encomendas..."
+              class="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition resize-none"></textarea>
+            <p class="text-xs text-slate-400 mt-1 text-right"><span id="descCount">0</span>/500</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== ETAPA 2 ===================== -->
+      <section class="step" data-step="2">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 md:p-8">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-1">Tipo de site</h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Escolha a opção que melhor representa o seu projeto.</p>
+
+          <div class="grid sm:grid-cols-2 gap-4" id="siteTypeGroup">
+            <label class="option-card border-2 border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-start gap-3">
+              <input type="radio" name="siteType" value="landing" data-price="1200" class="mt-1 accent-primary">
+              <div>
+                <p class="font-bold text-slate-900 dark:text-white">Landing Page</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Página única de conversão, ideal para campanhas.</p>
+                <p class="text-sm font-semibold text-primary dark:text-primary-light mt-2">a partir de R$ 1.200</p>
+              </div>
+            </label>
+
+            <label class="option-card border-2 border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-start gap-3">
+              <input type="radio" name="siteType" value="institucional" data-price="2200" class="mt-1 accent-primary">
+              <div>
+                <p class="font-bold text-slate-900 dark:text-white">Site Institucional</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Apresentação da empresa, serviços e contato.</p>
+                <p class="text-sm font-semibold text-primary dark:text-primary-light mt-2">a partir de R$ 2.200</p>
+              </div>
+            </label>
+
+            <label class="option-card border-2 border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-start gap-3">
+              <input type="radio" name="siteType" value="ecommerce" data-price="4500" class="mt-1 accent-primary">
+              <div>
+                <p class="font-bold text-slate-900 dark:text-white">E-commerce / Loja Virtual</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Venda de produtos com carrinho e pagamento.</p>
+                <p class="text-sm font-semibold text-primary dark:text-primary-light mt-2">a partir de R$ 4.500</p>
+              </div>
+            </label>
+
+            <label class="option-card border-2 border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-start gap-3">
+              <input type="radio" name="siteType" value="sistema" data-price="5500" class="mt-1 accent-primary">
+              <div>
+                <p class="font-bold text-slate-900 dark:text-white">Sistema Web / Personalizado</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Painel administrativo, login, cadastros e regras de negócio.</p>
+                <p class="text-sm font-semibold text-primary dark:text-primary-light mt-2">a partir de R$ 5.500</p>
+              </div>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== ETAPA 3 ===================== -->
+      <section class="step" data-step="3">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 md:p-8">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-1">Estrutura do site</h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Quantas páginas você estima que o site precisa? (Arraste o slider)</p>
+
+          <div class="text-center mb-8">
+            <span id="pagesValue" class="text-4xl font-extrabold text-primary dark:text-primary-light">5</span>
+            <span class="text-lg text-slate-500 dark:text-slate-400 ml-1">páginas</span>
+            <input id="pagesRange" type="range" min="1" max="15" value="5" class="w-full mt-4">
+            <div class="flex justify-between text-xs text-slate-400 mt-1">
+              <span>1</span><span>15</span>
+            </div>
+          </div>
+
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Selecione as seções que o site terá:</p>
+          <div class="grid sm:grid-cols-2 gap-3" id="sectionsGroup">
+            <!-- preenchido via JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== ETAPA 4 ===================== -->
+      <section class="step" data-step="4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 md:p-8">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-1">Módulos e funcionalidades</h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Selecione tudo que o seu projeto precisa. Cada módulo soma ao valor final.</p>
+
+          <div class="grid sm:grid-cols-2 gap-3" id="modulesGroup">
+            <!-- preenchido via JS -->
+          </div>
+
+          <div class="mt-6 p-4 rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/20">
+            <p class="text-sm text-slate-600 dark:text-slate-300">
+              <strong class="text-primary dark:text-primary-light">Dica:</strong> módulos que envolvem banco de dados (login, cadastro, etc.) exigem estrutura de back-end e influenciam diretamente no prazo e no valor.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== ETAPA 5 ===================== -->
+      <section class="step" data-step="5">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 md:p-8">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-1">Banco de dados e integrações</h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Essas escolhas definem a complexidade técnica do projeto.</p>
+
+          <div class="space-y-4">
+            <div>
+              <p class="font-semibold text-slate-900 dark:text-white mb-2">O site precisará de banco de dados?</p>
+              <div class="grid sm:grid-cols-3 gap-3" id="dbGroup">
+                <label class="option-card border-2 border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center">
+                  <input type="radio" name="db" value="none" data-price="0" class="mb-2 accent-primary">
+                  <p class="font-semibold text-sm">Não</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Apenas informativo</p>
+                </label>
+                <label class="option-card border-2 border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center">
+                  <input type="radio" name="db" value="simple" data-price="800" class="mb-2 accent-primary">
+                  <p class="font-semibold text-sm">Simples</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Cadastros e listagens</p>
+                  <p class="text-xs font-semibold text-primary dark:text-primary-light mt-1">+ R$ 800</p>
+                </label>
+                <label class="option-card border-2 border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center">
+                  <input type="radio" name="db" value="complex" data-price="2000" class="mb-2 accent-primary">
+                  <p class="font-semibold text-sm">Complexo</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Relacionamentos e relatórios</p>
+                  <p class="text-xs font-semibold text-primary dark:text-primary-light mt-1">+ R$ 2.000</p>
+                </label>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+              <p class="font-semibold text-slate-900 dark:text-white mb-2">Integrações externas</p>
+              <div class="grid sm:grid-cols-2 gap-3" id="integrationsGroup">
+                <!-- preenchido via JS -->
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+              <p class="font-semibold text-slate-900 dark:text-white mb-2">Prazo desejado</p>
+              <div class="grid sm:grid-cols-3 gap-3" id="deadlineGroup">
+                <label class="option-card border-2 border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center">
+                  <input type="radio" name="deadline" value="urgent" data-mult="1.25" class="mb-2 accent-primary">
+                  <p class="font-semibold text-sm">Urgente</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">até 15 dias</p>
+                  <p class="text-xs font-semibold text-amber-500 mt-1">+25%</p>
+                </label>
+                <label class="option-card border-2 border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center">
+                  <input type="radio" name="deadline" value="normal" data-mult="1" class="mb-2 accent-primary">
+                  <p class="font-semibold text-sm">Normal</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">30 a 45 dias</p>
+                </label>
+                <label class="option-card border-2 border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center">
+                  <input type="radio" name="deadline" value="flexible" data-mult="0.95" class="mb-2 accent-primary">
+                  <p class="font-semibold text-sm">Flexível</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">sem pressa</p>
+                  <p class="text-xs font-semibold text-green-500 mt-1">-5%</p>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== ETAPA 6 ===================== -->
+      <section class="step" data-step="6">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 md:p-8">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-1">Resumo da proposta</h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Confira os detalhes antes de gerar o PDF.</p>
+
+          <div id="summaryContent" class="space-y-4"><!-- preenchido via JS --></div>
+
+          <div class="mt-8 p-6 rounded-2xl gradient-primary text-white text-center">
+            <p class="text-sm text-white/80 uppercase tracking-widest font-semibold">Valor estimado do projeto</p>
+            <p id="finalPrice" class="text-4xl md:text-5xl font-extrabold mt-2 badge-price">R$ 0,00</p>
+            <p class="text-xs text-white/70 mt-2">*Estimativa. O valor final pode variar após análise detalhada.</p>
+          </div>
+
+          <div class="mt-6 flex flex-col sm:flex-row gap-3">
+            <button id="btnGeneratePDF"
+              class="flex-1 px-6 py-3.5 rounded-lg bg-primary hover:bg-primary-dark text-white font-semibold transition shadow-lg shadow-primary/30 flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              Baixar proposta em PDF
+            </button>
+            <a href="https://wa.me/5517991705754" target="_blank" rel="noopener"
+              class="flex-1 px-6 py-3.5 rounded-lg border-2 border-green-500 text-green-600 dark:text-green-400 hover:bg-green-500 hover:text-white font-semibold transition text-center">
+              Enviar pelo WhatsApp
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Navegação -->
+      <div class="mt-8 flex items-center justify-between">
+        <button id="btnPrev"
+          class="px-6 py-3 rounded-lg border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-30 disabled:cursor-not-allowed">
+          ← Anterior
+        </button>
+        <button id="btnNext"
+          class="px-6 py-3 rounded-lg bg-primary hover:bg-primary-dark text-white font-semibold transition shadow-lg shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed">
+          Próximo →
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // ===== TEMA =====
+    const themeToggle = document.getElementById('themeToggle');
+    const iconSun = document.getElementById('iconSun');
+    const iconMoon = document.getElementById('iconMoon');
+    function updateThemeIcons() {
+      const isDark = document.documentElement.classList.contains('dark');
+      iconSun.classList.toggle('hidden', !isDark);
+      iconMoon.classList.toggle('hidden', isDark);
+    }
+    themeToggle.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+      updateThemeIcons();
+    });
+    updateThemeIcons();
+
+    // ===== DADOS DE MÓDULOS E SEÇÕES =====
+    const SECTIONS = [
+      { id: 'home', label: 'Home / Início', price: 0, desc: 'Página principal' },
+      { id: 'sobre', label: 'Sobre', price: 150, desc: 'História e informações' },
+      { id: 'servicos', label: 'Serviços / Produtos', price: 250, desc: 'Catálogo de ofertas' },
+      { id: 'portfolio', label: 'Portfólio / Galeria', price: 200, desc: 'Trabalhos realizados' },
+      { id: 'blog', label: 'Blog / Notícias', price: 400, desc: 'Artigos e publicações' },
+      { id: 'depoimentos', label: 'Depoimentos', price: 120, desc: 'Avaliações de clientes' },
+      { id: 'faq', label: 'FAQ', price: 100, desc: 'Perguntas frequentes' },
+      { id: 'contato', label: 'Contato / Formulário', price: 180, desc: 'Envio de mensagens' },
+      { id: 'localizacao', label: 'Localização / Mapa', price: 130, desc: 'Endereço e mapa' },
+    ];
+
+    const MODULES = [
+      { id: 'login', label: 'Área de login / usuário', price: 900, db: true, desc: 'Autenticação de usuários' },
+      { id: 'admin', label: 'Painel administrativo', price: 1500, db: true, desc: 'Gestão de conteúdos' },
+      { id: 'pagamentos', label: 'Pagamentos online', price: 1200, db: true, desc: 'Cartão, PIX, boleto' },
+      { id: 'carrinho', label: 'Carrinho de compras', price: 800, db: true, desc: 'Fluxo de compra' },
+      { id: 'newsletter', label: 'Newsletter / E-mail marketing', price: 350, db: true, desc: 'Captura de leads' },
+      { id: 'agendamento', label: 'Sistema de agendamento', price: 1100, db: true, desc: 'Horários e reservas' },
+      { id: 'chat', label: 'Chat ao vivo', price: 700, db: false, desc: 'Atendimento online' },
+      { id: 'multilingua', label: 'Multilíngue', price: 600, db: false, desc: 'Mais de um idioma' },
+      { id: 'seo', label: 'SEO avançado', price: 450, db: false, desc: 'Otimização para buscadores' },
+      { id: 'animacoes', label: 'Animações / Interatividade', price: 500, db: false, desc: 'Efeitos e microinterações' },
+      { id: 'relatorios', label: 'Relatórios / Dashboards', price: 1300, db: true, desc: 'Gráficos e métricas' },
+      { id: 'notificacoes', label: 'Notificações por e-mail/WhatsApp', price: 550, db: true, desc: 'Alertas automáticos' },
+    ];
+
+    const INTEGRATIONS = [
+      { id: 'whatsapp', label: 'WhatsApp', price: 200, desc: 'Botão e envio de mensagens' },
+      { id: 'instagram', label: 'Instagram', price: 180, desc: 'Feed de publicações' },
+      { id: 'googlemaps', label: 'Google Maps', price: 150, desc: 'Mapa interativo' },
+      { id: 'mercadopago', label: 'Mercado Pago / Stripe', price: 600, desc: 'Gateways de pagamento' },
+      { id: 'correios', label: 'Frete / Correios', price: 400, desc: 'Cálculo de entrega' },
+      { id: 'crm', label: 'CRM / ERP externo', price: 900, desc: 'Integração com sistemas' },
+    ];
+
+    // ===== ESTADO =====
+    const state = {
+      step: 1,
+      totalSteps: 6,
+      siteType: null,
+      siteTypePrice: 0,
+      pages: 5,
+      sections: [],
+      modules: [],
+      db: null,
+      dbPrice: 0,
+      integrations: [],
+      deadlineMult: 1,
+    };
+
+    // ===== PREENCHER SEÇÕES =====
+    const sectionsGroup = document.getElementById('sectionsGroup');
+    SECTIONS.forEach(s => {
+      const label = document.createElement('label');
+      label.className = 'flex items-start gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition';
+      label.innerHTML = `
+        <input type="checkbox" value="${s.id}" data-price="${s.price}" class="mt-0.5 accent-primary section-check">
+        <div class="flex-1">
+          <p class="font-medium text-sm text-slate-900 dark:text-white">${s.label}</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">${s.desc}</p>
+        </div>
+        <span class="text-xs font-semibold text-primary dark:text-primary-light">${s.price === 0 ? 'grátis' : '+R$ ' + s.price}</span>
+      `;
+      sectionsGroup.appendChild(label);
+    });
+
+    // ===== PREENCHER MÓDULOS =====
+    const modulesGroup = document.getElementById('modulesGroup');
+    MODULES.forEach(m => {
+      const label = document.createElement('label');
+      label.className = 'flex items-start gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition';
+      label.innerHTML = `
+        <input type="checkbox" value="${m.id}" data-price="${m.price}" data-db="${m.db}" class="mt-0.5 accent-primary module-check">
+        <div class="flex-1">
+          <p class="font-medium text-sm text-slate-900 dark:text-white">${m.label}</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">${m.desc}</p>
+        </div>
+        <span class="text-xs font-semibold text-primary dark:text-primary-light">+R$ ${m.price}</span>
+      `;
+      modulesGroup.appendChild(label);
+    });
+
+    // ===== PREENCHER INTEGRAÇÕES =====
+    const integrationsGroup = document.getElementById('integrationsGroup');
+    INTEGRATIONS.forEach(i => {
+      const label = document.createElement('label');
+      label.className = 'flex items-start gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition';
+      label.innerHTML = `
+        <input type="checkbox" value="${i.id}" data-price="${i.price}" class="mt-0.5 accent-primary integration-check">
+        <div class="flex-1">
+          <p class="font-medium text-sm text-slate-900 dark:text-white">${i.label}</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">${i.desc}</p>
+        </div>
+        <span class="text-xs font-semibold text-primary dark:text-primary-light">+R$ ${i.price}</span>
+      `;
+      integrationsGroup.appendChild(label);
+    });
+
+    // ===== SLIDER DE PÁGINAS =====
+    const pagesRange = document.getElementById('pagesRange');
+    const pagesValue = document.getElementById('pagesValue');
+    pagesRange.addEventListener('input', () => {
+      state.pages = parseInt(pagesRange.value);
+      pagesValue.textContent = state.pages;
+    });
+
+    // ===== CONTADOR DE DESCRIÇÃO =====
+    const businessDesc = document.getElementById('businessDesc');
+    const descCount = document.getElementById('descCount');
+    businessDesc.addEventListener('input', () => {
+      descCount.textContent = businessDesc.value.length;
+    });
+
+    // ===== SELEÇÃO DE CARDS (radio/checkbox) =====
+    function bindOptionCards() {
+      document.querySelectorAll('.option-card').forEach(card => {
+        const input = card.querySelector('input');
+        if (!input) return;
+        input.addEventListener('change', () => {
+          if (input.type === 'radio') {
+            document.querySelectorAll(`input[name="${input.name}"]`).forEach(radio => {
+              radio.closest('.option-card').classList.remove('selected');
+            });
+            card.classList.add('selected');
+          } else {
+            card.classList.toggle('selected', input.checked);
+          }
+        });
+      });
+    }
+    bindOptionCards();
+
+    // ===== NAVEGAÇÃO =====
+    const steps = document.querySelectorAll('.step');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const progressBar = document.getElementById('progressBar');
+    const stepLabel = document.getElementById('stepLabel');
+    const stepName = document.getElementById('stepName');
+
+    const stepNames = ['Sobre o negócio', 'Tipo de site', 'Estrutura', 'Módulos', 'Banco de dados', 'Resumo'];
+
+    function updateUI() {
+      steps.forEach(s => s.classList.toggle('active', parseInt(s.dataset.step) === state.step));
+      progressBar.style.width = (state.step / state.totalSteps * 100) + '%';
+      stepLabel.textContent = `Etapa ${state.step} de ${state.totalSteps}`;
+      stepName.textContent = stepNames[state.step - 1];
+      btnPrev.disabled = state.step === 1;
+      btnNext.textContent = state.step === state.totalSteps ? 'Recomeçar' : 'Próximo →';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function validateStep() {
+      if (state.step === 1) {
+        if (!document.getElementById('clientName').value.trim()) {
+          alert('Por favor, informe seu nome ou empresa.'); return false;
+        }
+        if (!document.getElementById('clientEmail').value.trim()) {
+          alert('Por favor, informe seu e-mail.'); return false;
+        }
+        if (!businessDesc.value.trim()) {
+          alert('Por favor, descreva brevemente seu negócio.'); return false;
+        }
+      }
+      if (state.step === 2) {
+        const checked = document.querySelector('input[name="siteType"]:checked');
+        if (!checked) { alert('Selecione o tipo de site.'); return false; }
+      }
+      if (state.step === 5) {
+        const dbChecked = document.querySelector('input[name="db"]:checked');
+        if (!dbChecked) { alert('Informe se o site precisará de banco de dados.'); return false; }
+        const deadlineChecked = document.querySelector('input[name="deadline"]:checked');
+        if (!deadlineChecked) { alert('Selecione o prazo desejado.'); return false; }
+      }
+      return true;
+    }
+
+    btnNext.addEventListener('click', () => {
+      if (state.step === state.totalSteps) {
+        // Recomeçar
+        if (confirm('Deseja recomeçar o orçamento?')) {
+          location.reload();
+        }
+        return;
+      }
+      if (!validateStep()) return;
+      collectStepData();
+      state.step++;
+      updateUI();
+      if (state.step === 6) renderSummary();
+    });
+
+    btnPrev.addEventListener('click', () => {
+      if (state.step > 1) {
+        state.step--;
+        updateUI();
+      }
+    });
+
+    function collectStepData() {
+      if (state.step === 2) {
+        const checked = document.querySelector('input[name="siteType"]:checked');
+        state.siteType = checked.value;
+        state.siteTypePrice = parseInt(checked.dataset.price);
+      }
+      if (state.step === 3) {
+        state.sections = Array.from(document.querySelectorAll('.section-check:checked')).map(c => ({
+          id: c.value, price: parseInt(c.dataset.price)
+        }));
+      }
+      if (state.step === 4) {
+        state.modules = Array.from(document.querySelectorAll('.module-check:checked')).map(c => ({
+          id: c.value, price: parseInt(c.dataset.price), db: c.dataset.db === 'true'
+        }));
+      }
+      if (state.step === 5) {
+        const dbChecked = document.querySelector('input[name="db"]:checked');
+        state.db = dbChecked.value;
+        state.dbPrice = parseInt(dbChecked.dataset.price);
+        state.integrations = Array.from(document.querySelectorAll('.integration-check:checked')).map(c => ({
+          id: c.value, price: parseInt(c.dataset.price)
+        }));
+        const deadlineChecked = document.querySelector('input[name="deadline"]:checked');
+        state.deadlineMult = parseFloat(deadlineChecked.dataset.mult);
+      }
+    }
+
+    // ===== CÁLCULO =====
+    function calculateTotal() {
+      let total = state.siteTypePrice;
+      total += (state.pages - 1) * 150; // custo por página extra
+      total += state.sections.reduce((sum, s) => sum + s.price, 0);
+      total += state.modules.reduce((sum, m) => sum + m.price, 0);
+      total += state.dbPrice;
+      total += state.integrations.reduce((sum, i) => sum + i.price, 0);
+      total *= state.deadlineMult;
+      return Math.round(total);
+    }
+
+    function formatBRL(value) {
+      return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    // ===== RESUMO =====
+    function renderSummary() {
+      const summary = document.getElementById('summaryContent');
+      const siteTypeLabels = {
+        landing: 'Landing Page', institucional: 'Site Institucional',
+        ecommerce: 'E-commerce', sistema: 'Sistema Web Personalizado'
+      };
+      const dbLabels = { none: 'Sem banco de dados', simple: 'Banco de dados simples', complex: 'Banco de dados complexo' };
+      const deadlineLabels = { urgent: 'Urgente (até 15 dias) +25%', normal: 'Normal (30-45 dias)', flexible: 'Flexível -5%' };
+
+      const sectionNames = state.sections.map(s => SECTIONS.find(x => x.id === s.id)?.label).filter(Boolean);
+      const moduleNames = state.modules.map(m => MODULES.find(x => x.id === m.id)?.label).filter(Boolean);
+      const integrationNames = state.integrations.map(i => INTEGRATIONS.find(x => x.id === i.id)?.label).filter(Boolean);
+
+      summary.innerHTML = `
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+            <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Cliente</p>
+            <p class="font-semibold mt-1">${document.getElementById('clientName').value}</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">${document.getElementById('clientEmail').value}</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+            <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Tipo de projeto</p>
+            <p class="font-semibold mt-1">${siteTypeLabels[state.siteType] || '-'}</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">${state.pages} páginas</p>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+          <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Sobre o negócio</p>
+          <p class="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line">${businessDesc.value}</p>
+        </div>
+
+        ${sectionNames.length ? `
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+          <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Seções</p>
+          <div class="flex flex-wrap gap-2">${sectionNames.map(n => `<span class="px-2.5 py-1 text-xs font-medium rounded-md bg-primary/10 dark:bg-primary/20 text-primary-dark dark:text-primary-light">${n}</span>`).join('')}</div>
+        </div>` : ''}
+
+        ${moduleNames.length ? `
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+          <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Módulos</p>
+          <div class="flex flex-wrap gap-2">${moduleNames.map(n => `<span class="px-2.5 py-1 text-xs font-medium rounded-md bg-primary/10 dark:bg-primary/20 text-primary-dark dark:text-primary-light">${n}</span>`).join('')}</div>
+        </div>` : ''}
+
+        ${integrationNames.length ? `
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+          <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Integrações</p>
+          <div class="flex flex-wrap gap-2">${integrationNames.map(n => `<span class="px-2.5 py-1 text-xs font-medium rounded-md bg-primary/10 dark:bg-primary/20 text-primary-dark dark:text-primary-light">${n}</span>`).join('')}</div>
+        </div>` : ''}
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+            <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Banco de dados</p>
+            <p class="font-semibold mt-1">${dbLabels[state.db] || '-'}</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+            <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Prazo</p>
+            <p class="font-semibold mt-1">${deadlineLabels[document.querySelector('input[name="deadline"]:checked')?.value] || '-'}</p>
+          </div>
+        </div>
+      `;
+
+      const total = calculateTotal();
+      document.getElementById('finalPrice').textContent = formatBRL(total);
+    }
+
+    // ===== GERAÇÃO DO PDF =====
+    document.getElementById('btnGeneratePDF').addEventListener('click', () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const pageW = doc.internal.pageSize.getWidth();
+      const margin = 18;
+      let y = 20;
+
+      const primary = [37, 99, 235];
+      const dark = [15, 23, 42];
+      const gray = [100, 116, 139];
+      const lightGray = [241, 245, 249];
+
+      // Helpers
+      const setColor = (rgb) => doc.setTextColor(rgb[0], rgb[1], rgb[2]);
+      const addLine = () => { doc.setDrawColor(226, 232, 240); doc.line(margin, y, pageW - margin, y); y += 6; };
+      const checkPageBreak = (needed = 12) => {
+        if (y + needed > 275) { doc.addPage(); y = 20; }
+      };
+
+      // Header
+      doc.setFillColor(primary[0], primary[1], primary[2]);
+      doc.rect(0, 0, pageW, 38, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(22);
+      doc.text('<Erick Zaniratto/>', margin, 20);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+      doc.text('Desenvolvedor Full Stack  |  zanirattoduarteerick@gmail.com  |  +55 (17) 99170-5754', margin, 28);
+      doc.text('Proposta de Orçamento - ' + new Date().toLocaleDateString('pt-BR'), margin, 34);
+      y = 50;
+
+      // Cliente
+      setColor(dark); doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
+      doc.text('Dados do Cliente', margin, y); y += 7;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setColor(gray);
+      const clientName = document.getElementById('clientName').value;
+      const clientEmail = document.getElementById('clientEmail').value;
+      doc.text('Nome/Empresa: ' + clientName, margin, y); y += 5;
+      doc.text('E-mail: ' + clientEmail, margin, y); y += 5;
+      doc.text('Data: ' + new Date().toLocaleDateString('pt-BR'), margin, y); y += 10;
+      addLine();
+
+      // Descrição
+      setColor(dark); doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
+      doc.text('Sobre o Negócio', margin, y); y += 7;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setColor(gray);
+      const descLines = doc.splitTextToSize(businessDesc.value, pageW - margin * 2);
+      descLines.forEach(line => { checkPageBreak(6); doc.text(line, margin, y); y += 5; });
+      y += 5; addLine();
+
+      // Resumo do projeto
+      setColor(dark); doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
+      doc.text('Resumo do Projeto', margin, y); y += 7;
+
+      const siteTypeLabels = { landing: 'Landing Page', institucional: 'Site Institucional', ecommerce: 'E-commerce', sistema: 'Sistema Web Personalizado' };
+      const dbLabels = { none: 'Sem banco de dados', simple: 'Banco de dados simples', complex: 'Banco de dados complexo' };
+      const deadlineEl = document.querySelector('input[name="deadline"]:checked');
+      const deadlineLabels = { urgent: 'Urgente (até 15 dias) - acréscimo de 25%', normal: 'Normal (30 a 45 dias)', flexible: 'Flexível - desconto de 5%' };
+
+      const infoLines = [
+        ['Tipo de site', siteTypeLabels[state.siteType] || '-'],
+        ['Quantidade de páginas', state.pages + ' páginas'],
+        ['Banco de dados', dbLabels[state.db] || '-'],
+        ['Prazo desejado', deadlineLabels[deadlineEl?.value] || '-'],
+      ];
+      infoLines.forEach(([k, v]) => {
+        checkPageBreak(7);
+        doc.setFont('helvetica', 'bold'); setColor(dark);
+        doc.text(k + ':', margin, y);
+        doc.setFont('helvetica', 'normal'); setColor(gray);
+        doc.text(v, margin + 45, y);
+        y += 6;
+      });
+      y += 4;
+
+      // Seções
+      const sectionItems = state.sections.map(s => SECTIONS.find(x => x.id === s.id)).filter(Boolean);
+      if (sectionItems.length) {
+        setColor(dark); doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+        doc.text('Seções incluídas:', margin, y); y += 6;
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setColor(gray);
+        sectionItems.forEach(s => {
+          checkPageBreak(6);
+          doc.text('• ' + s.label + (s.price ? '  (' + formatBRL(s.price) + ')' : '  (incluso)'), margin + 2, y);
+          y += 5;
+        });
+        y += 4;
+      }
+
+      // Módulos
+      const moduleItems = state.modules.map(m => MODULES.find(x => x.id === m.id)).filter(Boolean);
+      if (moduleItems.length) {
+        setColor(dark); doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+        doc.text('Módulos e funcionalidades:', margin, y); y += 6;
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setColor(gray);
+        moduleItems.forEach(m => {
+          checkPageBreak(6);
+          doc.text('• ' + m.label + '  (' + formatBRL(m.price) + ')', margin + 2, y);
+          y += 5;
+        });
+        y += 4;
+      }
+
+      // Integrações
+      const integrationItems = state.integrations.map(i => INTEGRATIONS.find(x => x.id === i.id)).filter(Boolean);
+      if (integrationItems.length) {
+        setColor(dark); doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+        doc.text('Integrações:', margin, y); y += 6;
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setColor(gray);
+        integrationItems.forEach(i => {
+          checkPageBreak(6);
+          doc.text('• ' + i.label + '  (' + formatBRL(i.price) + ')', margin + 2, y);
+          y += 5;
+        });
+        y += 4;
+      }
+
+      // Valores detalhados
+      checkPageBreak(40);
+      addLine();
+      setColor(dark); doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
+      doc.text('Composição do Valor', margin, y); y += 7;
+      doc.setFontSize(10);
+
+      const breakdown = [
+        ['Valor base (' + (siteTypeLabels[state.siteType] || '-') + ')', formatBRL(state.siteTypePrice)],
+        ['Páginas adicionais (' + Math.max(0, state.pages - 1) + ')', formatBRL(Math.max(0, state.pages - 1) * 150)],
+        ['Seções (' + state.sections.length + ')', formatBRL(state.sections.reduce((a, b) => a + b.price, 0))],
+        ['Módulos (' + state.modules.length + ')', formatBRL(state.modules.reduce((a, b) => a + b.price, 0))],
+        ['Banco de dados (' + (dbLabels[state.db] || '-') + ')', formatBRL(state.dbPrice)],
+        ['Integrações (' + state.integrations.length + ')', formatBRL(state.integrations.reduce((a, b) => a + b.price, 0))],
+      ];
+      breakdown.forEach(([k, v]) => {
+        checkPageBreak(6);
+        doc.setFont('helvetica', 'normal'); setColor(gray);
+        doc.text(k, margin, y);
+        doc.setFont('helvetica', 'bold'); setColor(dark);
+        doc.text(v, pageW - margin, y, { align: 'right' });
+        y += 6;
+      });
+
+      // Desconto/acréscimo
+      if (state.deadlineMult !== 1) {
+        checkPageBreak(6);
+        doc.setFont('helvetica', 'normal'); setColor(gray);
+        const label = state.deadlineMult > 1 ? 'Acréscimo por urgência (+25%)' : 'Desconto por prazo flexível (-5%)';
+        const subtotal = state.siteTypePrice + Math.max(0, state.pages - 1) * 150 + state.sections.reduce((a, b) => a + b.price, 0) + state.modules.reduce((a, b) => a + b.price, 0) + state.dbPrice + state.integrations.reduce((a, b) => a + b.price, 0);
+        const diff = calculateTotal() - subtotal;
+        doc.text(label, margin, y);
+        doc.setFont('helvetica', 'bold');
+        doc.text((diff >= 0 ? '+' : '') + formatBRL(diff), pageW - margin, y, { align: 'right' });
+        y += 6;
+      }
+
+      y += 2;
+      addLine();
+
+      // Total destacado
+      checkPageBreak(30);
+      doc.setFillColor(primary[0], primary[1], primary[2]);
+      doc.roundedRect(margin, y, pageW - margin * 2, 26, 4, 4, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+      doc.text('VALOR ESTIMADO DO PROJETO', margin + 6, y + 9);
+      doc.setFontSize(20);
+      doc.text(formatBRL(calculateTotal()), pageW - margin - 6, y + 18, { align: 'right' });
+      y += 34;
+
+      // Observações
+      checkPageBreak(30);
+      setColor(dark); doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+      doc.text('Observações importantes', margin, y); y += 6;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); setColor(gray);
+      const notes = [
+        'Este valor é uma estimativa baseada nas informações fornecidas neste simulador.',
+        'O orçamento final será confirmado após análise detalhada dos requisitos.',
+        'Alterações no escopo durante o desenvolvimento podem impactar prazo e valor.',
+        'Os valores não incluem custos de hospedagem, domínio e licenças de terceiros.',
+        'Forma de pagamento: a combinar (entrada + parcelas durante o projeto).',
+        'Validade da proposta: 30 dias a partir da data de emissão.',
+      ];
+      notes.forEach(n => {
+        checkPageBreak(6);
+        const lines = doc.splitTextToSize('• ' + n, pageW - margin * 2);
+        lines.forEach(l => { doc.text(l, margin, y); y += 4.5; });
+      });
+      y += 4;
+
+      // Footer em cada página
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setDrawColor(226, 232, 240);
+        doc.line(margin, 285, pageW - margin, 285);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+        setColor(gray);
+        doc.text('Erick Zaniratto - Desenvolvedor Full Stack', margin, 290);
+        doc.text('Página ' + i + ' de ' + totalPages, pageW - margin, 290, { align: 'right' });
+      }
+
+      // Salvar
+      const safeName = clientName.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30) || 'Cliente';
+      doc.save('Orcamento_' + safeName + '_' + new Date().toISOString().slice(0, 10) + '.pdf');
+    });
+
+    // Inicializar
+    updateUI();
+  </script>
+</body>
+</html>
