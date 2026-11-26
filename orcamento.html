@@ -154,38 +154,38 @@
 
           <div class="grid sm:grid-cols-2 gap-4" id="siteTypeGroup">
             <label class="option-card border-2 border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-start gap-3">
-              <input type="radio" name="siteType" value="landing" data-price="1200" class="mt-1 accent-primary">
+              <input type="radio" name="siteType" value="landing" data-price="600" class="mt-1 accent-primary">
               <div>
                 <p class="font-bold text-slate-900 dark:text-white">Landing Page</p>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Página única de conversão, ideal para campanhas.</p>
+                <p class="text-sm font-semibold text-primary dark:text-primary-light mt-2">a partir de R$ 600</p>
+              </div>
+            </label>
+
+            <label class="option-card border-2 border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-start gap-3">
+              <input type="radio" name="siteType" value="institucional" data-price="1200" class="mt-1 accent-primary">
+              <div>
+                <p class="font-bold text-slate-900 dark:text-white">Site Institucional</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Apresentação da empresa, serviços e contato.</p>
                 <p class="text-sm font-semibold text-primary dark:text-primary-light mt-2">a partir de R$ 1.200</p>
               </div>
             </label>
 
             <label class="option-card border-2 border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-start gap-3">
-              <input type="radio" name="siteType" value="institucional" data-price="2200" class="mt-1 accent-primary">
-              <div>
-                <p class="font-bold text-slate-900 dark:text-white">Site Institucional</p>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Apresentação da empresa, serviços e contato.</p>
-                <p class="text-sm font-semibold text-primary dark:text-primary-light mt-2">a partir de R$ 2.200</p>
-              </div>
-            </label>
-
-            <label class="option-card border-2 border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-start gap-3">
-              <input type="radio" name="siteType" value="ecommerce" data-price="4500" class="mt-1 accent-primary">
+              <input type="radio" name="siteType" value="ecommerce" data-price="2500" class="mt-1 accent-primary">
               <div>
                 <p class="font-bold text-slate-900 dark:text-white">E-commerce / Loja Virtual</p>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Venda de produtos com carrinho e pagamento.</p>
-                <p class="text-sm font-semibold text-primary dark:text-primary-light mt-2">a partir de R$ 4.500</p>
+                <p class="text-sm font-semibold text-primary dark:text-primary-light mt-2">a partir de R$ 2.500</p>
               </div>
             </label>
 
             <label class="option-card border-2 border-slate-200 dark:border-slate-700 rounded-xl p-5 flex items-start gap-3">
-              <input type="radio" name="siteType" value="sistema" data-price="5500" class="mt-1 accent-primary">
+              <input type="radio" name="siteType" value="sistema" data-price="3500" class="mt-1 accent-primary">
               <div>
                 <p class="font-bold text-slate-900 dark:text-white">Sistema Web / Personalizado</p>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Painel administrativo, login, cadastros e regras de negócio.</p>
-                <p class="text-sm font-semibold text-primary dark:text-primary-light mt-2">a partir de R$ 5.500</p>
+                <p class="text-sm font-semibold text-primary dark:text-primary-light mt-2">a partir de R$ 3.500</p>
               </div>
             </label>
           </div>
@@ -739,7 +739,7 @@
         doc.setFont('helvetica', 'bold'); setColor(dark);
         doc.text(k + ':', margin, y);
         doc.setFont('helvetica', 'normal'); setColor(gray);
-        doc.text(v, margin + 45, y);
+        doc.text(v, margin + 55, y);
         y += 6;
       });
       y += 4;
